@@ -4,6 +4,7 @@ export type CareerType = 'job' | 'higherStudies' | 'business' | 'other';
 export type SkillCategory = 'technical' | 'soft' | 'language' | 'other';
 export type HighlightType = 'achievement' | 'milestone' | 'award' | 'project';
 export type SupportStatus = 'needSupport' | 'needExtraSupport' | 'noSupportNeeded';
+export type CourseStatus = 'completed' | 'in_progress' | 'planned';
 
 export interface CareerEntry {
   id: string;
@@ -44,6 +45,17 @@ export interface CareerHighlight {
   type: HighlightType;
 }
 
+export interface Course {
+  id: string;
+  name: string;
+  provider: string;
+  status: CourseStatus;
+  completionDate?: string;
+  certificateId?: string;
+  certificateUrl?: string;
+  description?: string;
+}
+
 export interface AlumniProfile {
   id: string;
   name: string;
@@ -64,6 +76,7 @@ export interface AlumniProfile {
   careers: CareerEntry[];
   skills: Skill[];
   highlights: CareerHighlight[];
+  courses: Course[];
   bio?: string;
   linkedin?: string;
   portfolio?: string;
@@ -160,6 +173,33 @@ export const demoAlumniProfile: AlumniProfile = {
       type: 'project',
     },
   ],
+  courses: [
+    {
+      id: '1',
+      name: 'AWS Solutions Architect',
+      provider: 'Amazon Web Services',
+      status: 'completed' as CourseStatus,
+      completionDate: '2024-06',
+      certificateId: 'AWS-SAA-123456',
+      certificateUrl: 'https://aws.amazon.com/verify/cert',
+      description: 'Cloud architecture fundamentals and best practices',
+    },
+    {
+      id: '2',
+      name: 'React Advanced Patterns',
+      provider: 'Frontend Masters',
+      status: 'completed' as CourseStatus,
+      completionDate: '2024-03',
+      description: 'Advanced React patterns including hooks, context, and performance optimization',
+    },
+    {
+      id: '3',
+      name: 'Machine Learning Specialization',
+      provider: 'Coursera',
+      status: 'in_progress' as CourseStatus,
+      description: 'Comprehensive ML course covering supervised and unsupervised learning',
+    },
+  ],
 };
 
 // API functions (placeholder for future backend integration)
@@ -220,7 +260,32 @@ export const alumniService = {
     });
   },
 
+  updateHighlight: async (alumniId: string, highlight: CareerHighlight): Promise<CareerHighlight> => {
+    return new Promise((resolve) => {
+      setTimeout(() => resolve(highlight), 500);
+    });
+  },
+
   deleteHighlight: async (alumniId: string, highlightId: string): Promise<void> => {
+    return new Promise((resolve) => {
+      setTimeout(() => resolve(), 500);
+    });
+  },
+
+  // Course operations
+  addCourse: async (alumniId: string, course: Omit<Course, 'id'>): Promise<Course> => {
+    return new Promise((resolve) => {
+      setTimeout(() => resolve({ ...course, id: Date.now().toString() }), 500);
+    });
+  },
+
+  updateCourse: async (alumniId: string, course: Course): Promise<Course> => {
+    return new Promise((resolve) => {
+      setTimeout(() => resolve(course), 500);
+    });
+  },
+
+  deleteCourse: async (alumniId: string, courseId: string): Promise<void> => {
     return new Promise((resolve) => {
       setTimeout(() => resolve(), 500);
     });

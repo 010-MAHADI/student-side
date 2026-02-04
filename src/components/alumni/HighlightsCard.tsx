@@ -1,6 +1,6 @@
 import { motion } from 'framer-motion';
 import { 
-  Trophy, Target, Award, Folder, Plus, Trash2, Calendar
+  Trophy, Target, Award, Folder, Plus, Trash2, Calendar, Edit
 } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -10,11 +10,12 @@ import { CareerHighlight, HighlightType } from '@/services/alumniService';
 interface HighlightsCardProps {
   highlights: CareerHighlight[];
   onAdd?: () => void;
+  onEdit?: (highlight: CareerHighlight) => void;
   onDelete?: (highlightId: string) => void;
   isEditable?: boolean;
 }
 
-export function HighlightsCard({ highlights, onAdd, onDelete, isEditable = true }: HighlightsCardProps) {
+export function HighlightsCard({ highlights, onAdd, onEdit, onDelete, isEditable = true }: HighlightsCardProps) {
   const getHighlightIcon = (type: HighlightType) => {
     switch (type) {
       case 'achievement':
@@ -98,14 +99,24 @@ export function HighlightsCard({ highlights, onAdd, onDelete, isEditable = true 
                   className={`relative p-4 rounded-xl border ${colorClass} group`}
                 >
                   {isEditable && (
-                    <Button 
-                      size="icon" 
-                      variant="ghost" 
-                      className="absolute top-2 right-2 h-7 w-7 opacity-0 group-hover:opacity-100 transition-opacity text-destructive"
-                      onClick={() => onDelete?.(highlight.id)}
-                    >
-                      <Trash2 className="w-4 h-4" />
-                    </Button>
+                    <div className="absolute top-2 right-2 flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                      <Button 
+                        size="icon" 
+                        variant="ghost" 
+                        className="h-7 w-7"
+                        onClick={() => onEdit?.(highlight)}
+                      >
+                        <Edit className="w-3.5 h-3.5" />
+                      </Button>
+                      <Button 
+                        size="icon" 
+                        variant="ghost" 
+                        className="h-7 w-7 text-destructive"
+                        onClick={() => onDelete?.(highlight.id)}
+                      >
+                        <Trash2 className="w-4 h-4" />
+                      </Button>
+                    </div>
                   )}
 
                   <div className="flex items-start gap-3">
