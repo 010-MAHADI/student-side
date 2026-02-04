@@ -3,8 +3,9 @@ import { motion } from 'framer-motion';
 import { useAuth } from '@/contexts/AuthContext';
 import { 
   FileText, Download, Loader2, AlertCircle, FolderOpen, 
-  GraduationCap, Upload, Filter, Badge, Eye, User, X
+  GraduationCap, Upload, Filter, Eye, User, X
 } from 'lucide-react';
+import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { 
   Dialog,
