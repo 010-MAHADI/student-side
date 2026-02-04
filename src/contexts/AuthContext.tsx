@@ -1,7 +1,7 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import api from '@/lib/api';
 
-export type UserRole = 'student' | 'captain' | 'teacher';
+export type UserRole = 'student' | 'captain' | 'teacher' | 'alumni';
 export type AdmissionStatus = 'not_started' | 'pending' | 'approved' | 'rejected';
 
 interface User {
@@ -74,6 +74,16 @@ const demoUsers: Record<UserRole, User> = {
     department: 'Computer Technology',
     role: 'teacher',
     relatedProfileId: 'demo-teacher-001',
+  },
+  alumni: {
+    id: 'demo-alumni-001',
+    name: 'Mohammad Rahim',
+    email: 'alumni@demo.com',
+    studentId: 'SPI-2020-0045',
+    admissionStatus: 'approved',
+    department: 'Computer Technology',
+    role: 'alumni',
+    relatedProfileId: 'demo-alumni-001',
   },
 };
 
