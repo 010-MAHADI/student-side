@@ -8,19 +8,40 @@ import { AlumniStatsCard } from '@/components/alumni/AlumniStatsCard';
 import { CareerTimeline } from '@/components/alumni/CareerTimeline';
 import { SkillsCard } from '@/components/alumni/SkillsCard';
 import { HighlightsCard } from '@/components/alumni/HighlightsCard';
+import { CoursesCard } from '@/components/alumni/CoursesCard';
+import { EditCareerDialog } from '@/components/alumni/EditCareerDialog';
+import { EditAlumniSkillDialog } from '@/components/alumni/EditAlumniSkillDialog';
+import { EditHighlightDialog } from '@/components/alumni/EditHighlightDialog';
+import { EditCourseDialog } from '@/components/alumni/EditCourseDialog';
 import { 
   alumniService, 
   AlumniProfile, 
   demoAlumniProfile,
   CareerEntry,
-  Skill 
+  Skill,
+  CareerHighlight,
+  Course
 } from '@/services/alumniService';
+import { toast } from 'sonner';
 
 export default function AlumniProfilePage() {
   const { user } = useAuth();
   const [alumni, setAlumni] = useState<AlumniProfile | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+
+  // Dialog states
+  const [careerDialogOpen, setCareerDialogOpen] = useState(false);
+  const [editingCareer, setEditingCareer] = useState<CareerEntry | null>(null);
+  
+  const [skillDialogOpen, setSkillDialogOpen] = useState(false);
+  const [editingSkill, setEditingSkill] = useState<Skill | null>(null);
+  
+  const [highlightDialogOpen, setHighlightDialogOpen] = useState(false);
+  const [editingHighlight, setEditingHighlight] = useState<CareerHighlight | null>(null);
+  
+  const [courseDialogOpen, setCourseDialogOpen] = useState(false);
+  const [editingCourse, setEditingCourse] = useState<Course | null>(null);
 
   useEffect(() => {
     fetchAlumniData();
@@ -53,15 +74,42 @@ export default function AlumniProfilePage() {
     }
   };
 
-  // Handlers for career entries
+  // Career handlers
   const handleAddCareer = () => {
-    // TODO: Open add career dialog
-    console.log('Add career');
+    setEditingCareer(null);
+    setCareerDialogOpen(true);
   };
 
   const handleEditCareer = (career: CareerEntry) => {
-    // TODO: Open edit career dialog
-    console.log('Edit career:', career);
+    setEditingCareer(career);
+    setCareerDialogOpen(true);
+  };
+
+  const handleSaveCareer = async (careerData: Omit<CareerEntry, 'id'> | CareerEntry) => {
+    if (!alumni) return;
+    
+    try {
+      if ('id' in careerData) {
+        // Update existing
+        await alumniService.updateCareer(alumni.id, careerData);
+        setAlumni({
+          ...alumni,
+          careers: alumni.careers.map(c => c.id === careerData.id ? careerData : c),
+        });
+        toast.success('Career entry updated');
+      } else {
+        // Add new
+        const newCareer = await alumniService.addCareer(alumni.id, careerData);
+        setAlumni({
+          ...alumni,
+          careers: [...alumni.careers, newCareer],
+        });
+        toast.success('Career entry added');
+      }
+    } catch (err) {
+      console.error('Failed to save career:', err);
+      toast.error('Failed to save career entry');
+    }
   };
 
   const handleDeleteCareer = async (careerId: string) => {
@@ -72,20 +120,47 @@ export default function AlumniProfilePage() {
         ...alumni,
         careers: alumni.careers.filter(c => c.id !== careerId),
       });
+      toast.success('Career entry deleted');
     } catch (err) {
       console.error('Failed to delete career:', err);
+      toast.error('Failed to delete career entry');
     }
   };
 
-  // Handlers for skills
+  // Skill handlers
   const handleAddSkill = () => {
-    // TODO: Open add skill dialog
-    console.log('Add skill');
+    setEditingSkill(null);
+    setSkillDialogOpen(true);
   };
 
   const handleEditSkill = (skill: Skill) => {
-    // TODO: Open edit skill dialog
-    console.log('Edit skill:', skill);
+    setEditingSkill(skill);
+    setSkillDialogOpen(true);
+  };
+
+  const handleSaveSkill = async (skillData: Omit<Skill, 'id'> | Skill) => {
+    if (!alumni) return;
+    
+    try {
+      if ('id' in skillData) {
+        await alumniService.updateSkill(alumni.id, skillData);
+        setAlumni({
+          ...alumni,
+          skills: alumni.skills.map(s => s.id === skillData.id ? skillData : s),
+        });
+        toast.success('Skill updated');
+      } else {
+        const newSkill = await alumniService.addSkill(alumni.id, skillData);
+        setAlumni({
+          ...alumni,
+          skills: [...alumni.skills, newSkill],
+        });
+        toast.success('Skill added');
+      }
+    } catch (err) {
+      console.error('Failed to save skill:', err);
+      toast.error('Failed to save skill');
+    }
   };
 
   const handleDeleteSkill = async (skillId: string) => {
@@ -96,15 +171,47 @@ export default function AlumniProfilePage() {
         ...alumni,
         skills: alumni.skills.filter(s => s.id !== skillId),
       });
+      toast.success('Skill deleted');
     } catch (err) {
       console.error('Failed to delete skill:', err);
+      toast.error('Failed to delete skill');
     }
   };
 
-  // Handlers for highlights
+  // Highlight handlers
   const handleAddHighlight = () => {
-    // TODO: Open add highlight dialog
-    console.log('Add highlight');
+    setEditingHighlight(null);
+    setHighlightDialogOpen(true);
+  };
+
+  const handleEditHighlight = (highlight: CareerHighlight) => {
+    setEditingHighlight(highlight);
+    setHighlightDialogOpen(true);
+  };
+
+  const handleSaveHighlight = async (highlightData: Omit<CareerHighlight, 'id'> | CareerHighlight) => {
+    if (!alumni) return;
+    
+    try {
+      if ('id' in highlightData) {
+        await alumniService.updateHighlight(alumni.id, highlightData);
+        setAlumni({
+          ...alumni,
+          highlights: alumni.highlights.map(h => h.id === highlightData.id ? highlightData : h),
+        });
+        toast.success('Highlight updated');
+      } else {
+        const newHighlight = await alumniService.addHighlight(alumni.id, highlightData);
+        setAlumni({
+          ...alumni,
+          highlights: [...alumni.highlights, newHighlight],
+        });
+        toast.success('Highlight added');
+      }
+    } catch (err) {
+      console.error('Failed to save highlight:', err);
+      toast.error('Failed to save highlight');
+    }
   };
 
   const handleDeleteHighlight = async (highlightId: string) => {
@@ -115,8 +222,61 @@ export default function AlumniProfilePage() {
         ...alumni,
         highlights: alumni.highlights.filter(h => h.id !== highlightId),
       });
+      toast.success('Highlight deleted');
     } catch (err) {
       console.error('Failed to delete highlight:', err);
+      toast.error('Failed to delete highlight');
+    }
+  };
+
+  // Course handlers
+  const handleAddCourse = () => {
+    setEditingCourse(null);
+    setCourseDialogOpen(true);
+  };
+
+  const handleEditCourse = (course: Course) => {
+    setEditingCourse(course);
+    setCourseDialogOpen(true);
+  };
+
+  const handleSaveCourse = async (courseData: Omit<Course, 'id'> | Course) => {
+    if (!alumni) return;
+    
+    try {
+      if ('id' in courseData) {
+        await alumniService.updateCourse(alumni.id, courseData);
+        setAlumni({
+          ...alumni,
+          courses: alumni.courses.map(c => c.id === courseData.id ? courseData : c),
+        });
+        toast.success('Course updated');
+      } else {
+        const newCourse = await alumniService.addCourse(alumni.id, courseData);
+        setAlumni({
+          ...alumni,
+          courses: [...alumni.courses, newCourse],
+        });
+        toast.success('Course added');
+      }
+    } catch (err) {
+      console.error('Failed to save course:', err);
+      toast.error('Failed to save course');
+    }
+  };
+
+  const handleDeleteCourse = async (courseId: string) => {
+    if (!alumni) return;
+    try {
+      await alumniService.deleteCourse(alumni.id, courseId);
+      setAlumni({
+        ...alumni,
+        courses: alumni.courses.filter(c => c.id !== courseId),
+      });
+      toast.success('Course deleted');
+    } catch (err) {
+      console.error('Failed to delete course:', err);
+      toast.error('Failed to delete course');
     }
   };
 
@@ -164,34 +324,74 @@ export default function AlumniProfilePage() {
       {/* Stats */}
       <AlumniStatsCard alumni={alumni} />
 
-      {/* Main Content Grid */}
-      <div className="grid gap-6 lg:grid-cols-3">
-        {/* Career Timeline - Takes 2 columns on large screens */}
-        <div className="lg:col-span-2">
-          <CareerTimeline
-            careers={alumni.careers}
-            onAdd={handleAddCareer}
-            onEdit={handleEditCareer}
-            onDelete={handleDeleteCareer}
-          />
-        </div>
+      {/* Courses Section */}
+      <CoursesCard
+        courses={alumni.courses}
+        onAdd={handleAddCourse}
+        onEdit={handleEditCourse}
+        onDelete={handleDeleteCourse}
+      />
 
-        {/* Right Column - Skills & Highlights */}
-        <div className="space-y-6">
-          <SkillsCard
-            skills={alumni.skills}
-            onAdd={handleAddSkill}
-            onEdit={handleEditSkill}
-            onDelete={handleDeleteSkill}
-          />
+      {/* Career Journey Section - Contains Timeline, Skills & Highlights */}
+      <div className="space-y-6">
+        <div className="grid gap-6 lg:grid-cols-3">
+          {/* Career Timeline - Takes 2 columns on large screens */}
+          <div className="lg:col-span-2">
+            <CareerTimeline
+              careers={alumni.careers}
+              onAdd={handleAddCareer}
+              onEdit={handleEditCareer}
+              onDelete={handleDeleteCareer}
+            />
+          </div>
 
-          <HighlightsCard
-            highlights={alumni.highlights}
-            onAdd={handleAddHighlight}
-            onDelete={handleDeleteHighlight}
-          />
+          {/* Right Column - Skills & Highlights (under Career Journey) */}
+          <div className="space-y-6">
+            <SkillsCard
+              skills={alumni.skills}
+              onAdd={handleAddSkill}
+              onEdit={handleEditSkill}
+              onDelete={handleDeleteSkill}
+            />
+
+            <HighlightsCard
+              highlights={alumni.highlights}
+              onAdd={handleAddHighlight}
+              onEdit={handleEditHighlight}
+              onDelete={handleDeleteHighlight}
+            />
+          </div>
         </div>
       </div>
+
+      {/* Dialogs */}
+      <EditCareerDialog
+        open={careerDialogOpen}
+        onOpenChange={setCareerDialogOpen}
+        career={editingCareer}
+        onSave={handleSaveCareer}
+      />
+
+      <EditAlumniSkillDialog
+        open={skillDialogOpen}
+        onOpenChange={setSkillDialogOpen}
+        skill={editingSkill}
+        onSave={handleSaveSkill}
+      />
+
+      <EditHighlightDialog
+        open={highlightDialogOpen}
+        onOpenChange={setHighlightDialogOpen}
+        highlight={editingHighlight}
+        onSave={handleSaveHighlight}
+      />
+
+      <EditCourseDialog
+        open={courseDialogOpen}
+        onOpenChange={setCourseDialogOpen}
+        course={editingCourse}
+        onSave={handleSaveCourse}
+      />
     </motion.div>
   );
 }
