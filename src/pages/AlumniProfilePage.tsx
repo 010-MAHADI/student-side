@@ -313,7 +313,7 @@ export default function AlumniProfilePage() {
     <motion.div
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
-      className="space-y-6 pb-8"
+      className="space-y-4 md:space-y-6 pb-6 md:pb-8 max-w-full overflow-x-hidden"
     >
       {/* Profile Header */}
       <AlumniProfileHeader 
@@ -334,7 +334,7 @@ export default function AlumniProfilePage() {
 
       {/* Career Journey Section - Contains Timeline, Skills & Highlights */}
       <div className="space-y-6">
-        <div className="grid gap-6 lg:grid-cols-3">
+        <div className="grid gap-4 md:gap-6 lg:grid-cols-3">
           {/* Career Timeline - Takes 2 columns on large screens */}
           <div className="lg:col-span-2">
             <CareerTimeline
