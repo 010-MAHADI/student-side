@@ -52,7 +52,7 @@ export function DayCard({ day, classes, timeSlots, isToday, runningClassId, upco
       initial={{ opacity: 0, scale: 0.95 }}
       animate={{ opacity: 1, scale: 1 }}
       className={cn(
-        "w-full min-w-[280px] max-w-[340px] bg-card rounded-2xl border shadow-card overflow-hidden flex-shrink-0 snap-center",
+        "w-full bg-card rounded-2xl border shadow-card overflow-hidden",
         isToday ? "border-primary/50 ring-2 ring-primary/20" : "border-border"
       )}
     >
