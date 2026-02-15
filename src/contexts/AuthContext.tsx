@@ -15,6 +15,8 @@ interface User {
   semester?: number;
   role: UserRole;
   relatedProfileId?: string;
+  studentStatus?: string;
+  isAlumni?: boolean;
 }
 
 interface AuthContextType {
@@ -50,9 +52,11 @@ const demoUsers: Record<UserRole, User> = {
     studentId: 'SPI-2024-0001',
     admissionStatus: 'approved',
     department: 'Computer Technology',
-    semester: 4,
+    semester: 8, // Changed to 8 to test alumni profile functionality
     role: 'student',
     relatedProfileId: 'demo-student-001',
+    studentStatus: 'graduated',
+    isAlumni: true,
   },
   captain: {
     id: 'demo-captain-001',
@@ -61,9 +65,11 @@ const demoUsers: Record<UserRole, User> = {
     studentId: 'SPI-2024-0002',
     admissionStatus: 'approved',
     department: 'Computer Technology',
-    semester: 4,
+    semester: 6, // Regular semester for captain
     role: 'captain',
     relatedProfileId: 'demo-captain-001',
+    studentStatus: 'active',
+    isAlumni: false,
   },
   teacher: {
     id: 'demo-teacher-001',
@@ -74,6 +80,7 @@ const demoUsers: Record<UserRole, User> = {
     department: 'Computer Technology',
     role: 'teacher',
     relatedProfileId: 'demo-teacher-001',
+    isAlumni: false,
   },
   alumni: {
     id: 'demo-alumni-001',
@@ -84,6 +91,7 @@ const demoUsers: Record<UserRole, User> = {
     department: 'Computer Technology',
     role: 'alumni',
     relatedProfileId: 'demo-alumni-001',
+    isAlumni: true,
   },
 };
 
@@ -118,16 +126,45 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           // Ensure relatedProfileId is properly set
           const relatedProfileId = response.user.related_profile_id || response.user.student_profile_id || response.user.teacher_profile_id || response.user.id;
           
+          // Try to get the full name from the profile
+          let fullName = response.user.username; // Default to username (email)
+          
+          // If first_name and last_name are available, use them
+          if (response.user.first_name && response.user.last_name) {
+            fullName = `${response.user.first_name} ${response.user.last_name}`;
+          } else if (relatedProfileId && (response.user.role === 'student' || response.user.role === 'captain')) {
+            // For students/captains, try to fetch the profile to get fullNameEnglish
+            try {
+              const profileResponse = await api.get<any>(`/students/${relatedProfileId}/`);
+              if (profileResponse.full_name_english) {
+                fullName = profileResponse.full_name_english;
+              }
+            } catch (profileError) {
+              console.error('Failed to fetch student profile for name:', profileError);
+            }
+          } else if (relatedProfileId && response.user.role === 'teacher') {
+            // For teachers, try to fetch the teacher profile
+            try {
+              const profileResponse = await api.get<any>(`/teachers/${relatedProfileId}/`);
+              if (profileResponse.full_name_english) {
+                fullName = profileResponse.full_name_english;
+              }
+            } catch (profileError) {
+              console.error('Failed to fetch teacher profile for name:', profileError);
+            }
+          }
+          
           setUser({
             id: response.user.id,
-            name: response.user.first_name && response.user.last_name 
-              ? `${response.user.first_name} ${response.user.last_name}` 
-              : response.user.username,
+            name: fullName,
             email: response.user.email,
             studentId: response.user.related_profile_id || response.user.id,
             role: response.user.role || 'student',
             admissionStatus: response.user.admission_status || 'not_started',
             relatedProfileId: relatedProfileId,
+            semester: response.user.semester,
+            studentStatus: response.user.student_status,
+            isAlumni: response.user.is_alumni,
           });
           
           // Store relatedProfileId in localStorage as backup
@@ -164,16 +201,45 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       // Ensure relatedProfileId is properly set
       const relatedProfileId = response.user.related_profile_id || response.user.student_profile_id || response.user.teacher_profile_id || response.user.id;
       
+      // Try to get the full name from the profile
+      let fullName = response.user.username; // Default to username (email)
+      
+      // If first_name and last_name are available, use them
+      if (response.user.first_name && response.user.last_name) {
+        fullName = `${response.user.first_name} ${response.user.last_name}`;
+      } else if (relatedProfileId && (response.user.role === 'student' || response.user.role === 'captain')) {
+        // For students/captains, try to fetch the profile to get fullNameEnglish
+        try {
+          const profileResponse = await api.get<any>(`/students/${relatedProfileId}/`);
+          if (profileResponse.full_name_english) {
+            fullName = profileResponse.full_name_english;
+          }
+        } catch (profileError) {
+          console.error('Failed to fetch student profile for name:', profileError);
+        }
+      } else if (relatedProfileId && response.user.role === 'teacher') {
+        // For teachers, try to fetch the teacher profile
+        try {
+          const profileResponse = await api.get<any>(`/teachers/${relatedProfileId}/`);
+          if (profileResponse.full_name_english) {
+            fullName = profileResponse.full_name_english;
+          }
+        } catch (profileError) {
+          console.error('Failed to fetch teacher profile for name:', profileError);
+        }
+      }
+      
       setUser({
         id: response.user.id,
-        name: response.user.first_name && response.user.last_name 
-          ? `${response.user.first_name} ${response.user.last_name}` 
-          : response.user.username,
+        name: fullName,
         email: response.user.email,
         studentId: response.user.related_profile_id || response.user.id,
         role: response.user.role || 'student',
         admissionStatus: response.user.admission_status || 'not_started',
         relatedProfileId: relatedProfileId,
+        semester: response.user.semester,
+        studentStatus: response.user.student_status,
+        isAlumni: response.user.is_alumni,
       });
       
       // Store relatedProfileId in localStorage as backup
@@ -257,12 +323,15 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         
         setUser({
           id: response.user.id,
-          name: data.fullName,
+          name: data.fullName, // Use the fullName from signup form
           email: data.email,
           studentId: response.user.related_profile_id || response.user.id,
           role: data.role,
           admissionStatus: response.user.admission_status || 'not_started',
           relatedProfileId: relatedProfileId,
+          semester: response.user.semester,
+          studentStatus: response.user.student_status,
+          isAlumni: response.user.is_alumni,
         });
         
         // Store relatedProfileId in localStorage as backup

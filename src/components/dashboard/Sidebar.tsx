@@ -43,6 +43,7 @@ const menuItems: MenuItem[] = [
   { icon: LayoutDashboard, label: 'Dashboard', path: '/dashboard', roles: ['student', 'captain', 'teacher', 'alumni'] },
   { icon: Bell, label: 'Notices & Updates', path: '/dashboard/notices', roles: ['student', 'captain', 'teacher', 'alumni'] },
   { icon: User, label: 'Profile', path: '/dashboard/profile', roles: ['student', 'captain'] },
+  { icon: GraduationCap, label: 'Alumni Profile', path: '/dashboard/alumni-profile', roles: ['student', 'captain'] }, // For semester 8 students
   { icon: FileText, label: 'Admission', path: '/dashboard/admission', roles: ['student', 'captain'] },
   { icon: Calendar, label: 'Class Routine', path: '/dashboard/routine', roles: ['student', 'captain', 'teacher'] },
   { icon: BookOpen, label: 'Learning Hub', path: '/dashboard/learning-hub', roles: ['student', 'captain', 'teacher'] },
@@ -54,6 +55,7 @@ const menuItems: MenuItem[] = [
   { icon: AlertTriangle, label: 'Complaints', path: '/dashboard/complaints', roles: ['student', 'captain', 'teacher'] },
   { icon: Shield, label: 'My Allegations', path: '/dashboard/my-allegations', roles: ['student', 'captain'] },
   { icon: Send, label: 'Applications', path: '/dashboard/applications', roles: ['student', 'captain'] },
+  { icon: Settings, label: 'Settings', path: '/dashboard/settings', roles: ['student', 'captain', 'teacher', 'alumni'] },
   // Captain-specific items
   { icon: UserCheck, label: 'Add Attendance', path: '/dashboard/add-attendance', roles: ['captain'] },
   { icon: Phone, label: 'Teacher Contacts', path: '/dashboard/teacher-contacts', roles: ['captain'] },
@@ -82,8 +84,24 @@ export function Sidebar() {
 
   const userRole = user?.role || 'student';
 
-  // Filter menu items based on user role
-  const filteredMenuItems = menuItems.filter(item => item.roles.includes(userRole));
+  // Check if user is graduated or alumni
+  const isGraduatedOrAlumni = userRole === 'alumni' || user?.isAlumni === true;
+
+  // Filter menu items based on user role and graduation status
+  const filteredMenuItems = menuItems.filter(item => {
+    // Check role access first
+    if (!item.roles.includes(userRole)) return false;
+    
+    // Special handling for profile navigation based on graduation status
+    if (item.path === '/dashboard/profile' && isGraduatedOrAlumni) {
+      return false; // Hide regular profile for graduated students/alumni
+    }
+    if (item.path === '/dashboard/alumni-profile' && !isGraduatedOrAlumni) {
+      return false; // Hide alumni profile for non-graduated students
+    }
+    
+    return true;
+  });
   const filteredBottomItems = bottomMenuItems.filter(item => item.roles.includes(userRole));
 
   const getRoleBadge = () => {

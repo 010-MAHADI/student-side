@@ -26,16 +26,25 @@ export function DashboardLayout() {
   const [unreadCount, setUnreadCount] = useState(0);
 
   useEffect(() => {
+    if (!user) return;
     loadUnreadCount();
     const interval = setInterval(loadUnreadCount, 30000);
     return () => clearInterval(interval);
-  }, []);
+  }, [user]);
 
   const loadUnreadCount = async () => {
+    if (!user) return;
     try {
       const response = await noticeService.getUnreadCount();
       setUnreadCount(response.unread_count);
     } catch (err) {
+      const statusCode = typeof err === 'object' && err !== null && 'status_code' in err
+        ? (err as { status_code?: number }).status_code
+        : undefined;
+      if (statusCode === 401 || statusCode === 403) {
+        setUnreadCount(0);
+        return;
+      }
       console.error('Error loading unread count:', err);
     }
   };
@@ -208,10 +217,25 @@ export function DashboardLayout() {
                   </div>
                 </div>
                 
-                <DropdownMenuItem onClick={() => navigate('/dashboard/profile')} className="cursor-pointer">
+                <DropdownMenuItem onClick={() => {
+                  // Navigate to appropriate profile based on alumni status
+                  if (user?.isAlumni) {
+                    navigate('/dashboard/alumni-profile');
+                  } else {
+                    navigate('/dashboard/profile');
+                  }
+                }} className="cursor-pointer">
                   <User className="w-4 h-4 mr-2" />
-                  View Profile
+                  {user?.isAlumni ? 'Alumni Profile' : 'View Profile'}
                 </DropdownMenuItem>
+                
+                {/* Add button to view main profile for alumni */}
+                {user?.isAlumni && (
+                  <DropdownMenuItem onClick={() => navigate('/dashboard/profile')} className="cursor-pointer">
+                    <User className="w-4 h-4 mr-2" />
+                    View Main Profile
+                  </DropdownMenuItem>
+                )}
                 <DropdownMenuItem onClick={() => navigate('/dashboard/settings')} className="cursor-pointer">
                   <Settings className="w-4 h-4 mr-2" />
                   Settings

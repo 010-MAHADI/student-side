@@ -10,7 +10,9 @@ type ClassPeriod = {
   startTime: string;
   endTime: string;
   subject: string;
-  code: string;
+  subjectCode: string;
+  classType: 'Theory' | 'Lab';
+  labName?: string;
   room: string;
   teacher: string;
 };
