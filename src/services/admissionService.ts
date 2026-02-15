@@ -30,6 +30,7 @@ export interface AdmissionFormData {
   gender: string;
   religion: string;
   blood_group: string;
+  nationality?: string;
   
   // Contact Information
   mobile_student: string;
