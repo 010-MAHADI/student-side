@@ -232,24 +232,6 @@ export function Sidebar() {
           )}
         </nav>
 
-        {/* Logout */}
-        <div className="p-3 border-t border-border">
-          <button
-            onClick={handleLogout}
-            className={cn(
-              "flex items-center gap-3 px-3 py-2.5 rounded-lg w-full transition-colors",
-              "text-muted-foreground hover:bg-destructive/10 hover:text-destructive"
-            )}
-          >
-            <LogOut className="w-5 h-5 flex-shrink-0" />
-            <motion.span
-              animate={{ opacity: isCollapsed ? 0 : 1, width: isCollapsed ? 0 : 'auto' }}
-              className="text-sm font-medium whitespace-nowrap overflow-hidden"
-            >
-              Logout
-            </motion.span>
-          </button>
-        </div>
       </motion.aside>
     </>
   );
