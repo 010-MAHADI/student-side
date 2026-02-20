@@ -1,4 +1,4 @@
-import { motion } from 'framer-motion';
+import { motion, AnimatePresence } from 'framer-motion';
 import { NavLink, useLocation, useNavigate } from 'react-router-dom';
 import {
   LayoutDashboard,
@@ -23,6 +23,7 @@ import {
   AlertTriangle,
   Shield,
   Sparkles,
+  ChevronDown,
 } from 'lucide-react';
 import { useAuth, UserRole } from '@/contexts/AuthContext';
 import { Button } from '@/components/ui/button';
@@ -72,6 +73,7 @@ export function Sidebar() {
   const { logout, user } = useAuth();
   const [isCollapsed, setIsCollapsed] = useState(false);
   const [isMobileOpen, setIsMobileOpen] = useState(false);
+  const [isUpcomingOpen, setIsUpcomingOpen] = useState(true);
 
   const handleLogout = async () => {
     await logout();
@@ -195,18 +197,37 @@ export function Sidebar() {
           {/* Upcoming group */}
           {filteredUpcomingItems.length > 0 && (
             <div className="mt-4 pt-4 border-t border-border">
-              <motion.div
-                animate={{ opacity: isCollapsed ? 0 : 1, height: isCollapsed ? 0 : 'auto' }}
-                className="px-4 mb-2 overflow-hidden"
+              <button
+                onClick={() => !isCollapsed && setIsUpcomingOpen(!isUpcomingOpen)}
+                className={cn(
+                  "w-full px-4 mb-2 flex items-center justify-between cursor-pointer hover:opacity-80 transition-opacity",
+                  isCollapsed && "justify-center"
+                )}
               >
                 <span className="text-xs font-semibold uppercase tracking-wider text-muted-foreground flex items-center gap-1.5">
                   <Sparkles className="w-3 h-3" />
-                  Upcoming
+                  {!isCollapsed && "Upcoming"}
                 </span>
-              </motion.div>
-              <ul className="space-y-1 px-3">
-                {filteredUpcomingItems.map(renderNavItem)}
-              </ul>
+                {!isCollapsed && (
+                  <ChevronDown className={cn(
+                    "w-3.5 h-3.5 text-muted-foreground transition-transform duration-200",
+                    !isUpcomingOpen && "-rotate-90"
+                  )} />
+                )}
+              </button>
+              <AnimatePresence initial={false}>
+                {(isUpcomingOpen || isCollapsed) && (
+                  <motion.ul
+                    initial={{ height: 0, opacity: 0 }}
+                    animate={{ height: 'auto', opacity: 1 }}
+                    exit={{ height: 0, opacity: 0 }}
+                    transition={{ duration: 0.2 }}
+                    className="space-y-1 px-3 overflow-hidden"
+                  >
+                    {filteredUpcomingItems.map(renderNavItem)}
+                  </motion.ul>
+                )}
+              </AnimatePresence>
             </div>
           )}
         </nav>
