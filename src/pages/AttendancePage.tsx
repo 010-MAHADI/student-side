@@ -68,21 +68,39 @@ export default function AttendancePage() {
     try {
       setLoading(true);
       setError(null);
-      
-      const [attendanceResponse, studentData] = await Promise.all([
-        attendanceService.getMyAttendance({
+
+      const studentDataPromise = studentService.getStudent(user.relatedProfileId).catch(() => null);
+
+      // Fetch all paginated attendance pages so totals do not freeze at page-size limit.
+      const allAttendance: AttendanceRecord[] = [];
+      let page = 1;
+      let hasMore = true;
+
+      while (hasMore) {
+        const attendanceResponse = await attendanceService.getMyAttendance({
           student: user.relatedProfileId,
-          page_size: 1000,
-          ordering: '-date'
-        }).catch(() => ({ results: [] })),
-        studentService.getStudent(user.relatedProfileId).catch(() => null)
-      ]);
+          page_size: 200,
+          page,
+          ordering: '-date',
+        }).catch(() => ({ results: [], next: null }));
+
+        allAttendance.push(...(attendanceResponse.results || []));
+        hasMore = !!attendanceResponse.next;
+        page += 1;
+      }
+
+      const studentData = await studentDataPromise;
       
-      setAttendanceRecords(attendanceResponse.results);
+      // Use live records for counting. Include pending so captain submissions
+      // are reflected immediately; exclude rejected/draft.
+      const liveCountableRecords = (allAttendance || []).filter(
+        (record) => record.status !== 'rejected' && record.status !== 'draft'
+      );
+      setAttendanceRecords(liveCountableRecords);
       
       const summaryMap = new Map<string, { total: number; present: number; name: string }>();
       
-      attendanceResponse.results.forEach(record => {
+      liveCountableRecords.forEach(record => {
         const key = record.subjectCode;
         if (!summaryMap.has(key)) {
           summaryMap.set(key, { total: 0, present: 0, name: record.subjectName });
@@ -94,7 +112,8 @@ export default function AttendancePage() {
         }
       });
       
-      if (studentData?.semesterAttendance && studentData.semesterAttendance.length > 0) {
+      // Fallback to profile semesterAttendance only when live records are unavailable.
+      if (summaryMap.size === 0 && studentData?.semesterAttendance && studentData.semesterAttendance.length > 0) {
         const currentSemester = studentData.semester || 1;
         const relevantSemester = studentData.semesterAttendance
           .filter((sem: any) => sem.semester <= currentSemester)
@@ -103,20 +122,11 @@ export default function AttendancePage() {
         if (relevantSemester?.subjects) {
           relevantSemester.subjects.forEach((subject: any) => {
             const key = subject.code;
-            if (summaryMap.has(key)) {
-              const existing = summaryMap.get(key)!;
-              if (subject.total > 0) {
-                existing.total = subject.total;
-                existing.present = subject.present;
-              }
-              if (subject.name) existing.name = subject.name;
-            } else {
-              summaryMap.set(key, {
-                total: subject.total || 0,
-                present: subject.present || 0,
-                name: subject.name || key
-              });
-            }
+            summaryMap.set(key, {
+              total: subject.total || 0,
+              present: subject.present || 0,
+              name: subject.name || key
+            });
           });
         }
       }
