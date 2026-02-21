@@ -21,6 +21,7 @@ import { dashboardService } from '@/services/dashboardService';
 import { StudentProfileHeader } from '@/components/profile/StudentProfileHeader';
 import { StudentStatsCard } from '@/components/profile/StudentStatsCard';
 import { StudentOverviewTab } from '@/components/profile/StudentOverviewTab';
+import { LinkedInTeacherProfile } from '@/components/profile/LinkedInTeacherProfile';
 
 const studentTabs = [
   { id: 'overview', label: 'Overview', icon: User },
@@ -250,23 +251,9 @@ export function ProfilePageFixed() {
 
   const performanceMetrics = calculatePerformanceMetrics();
 
-  // Teacher Profile Rendering - simplified for now
+  // Teacher Profile Rendering - LinkedIn Style
   if (isTeacher) {
-    return (
-      <div className="space-y-6 max-w-4xl mx-auto p-6">
-        <div className="bg-card rounded-xl border border-border p-6 shadow-card">
-          <div className="flex items-center gap-4">
-            <div className="w-16 h-16 rounded-full bg-primary/10 flex items-center justify-center">
-              <User className="w-8 h-8 text-primary" />
-            </div>
-            <div>
-              <h1 className="text-2xl font-bold">{displayName}</h1>
-              <p className="text-muted-foreground">Teacher Profile</p>
-            </div>
-          </div>
-        </div>
-      </div>
-    );
+    return <LinkedInTeacherProfile />;
   }
 
   // Format file size
