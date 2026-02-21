@@ -2,8 +2,8 @@ import { useState, useEffect } from 'react';
 import { useParams } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { 
-  GraduationCap, Mail, Phone, MapPin, Building, Award, Calendar, 
-  BookOpen, Copy, Check, Share2, FileText, Star, Clock, Target,
+  GraduationCap, Mail, Phone, MapPin, Building, Award, 
+  BookOpen, Copy, Check, Share2, FileText, Clock, Target,
   TrendingUp, User, BarChart3, Loader2, AlertCircle
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -286,7 +286,7 @@ This is a public profile showcasing academic information and achievements.`,
               />
             ) : (
               <div className="w-24 h-24 sm:w-32 sm:h-32 md:w-40 md:h-40 rounded-full bg-gradient-to-br from-emerald-500 to-teal-600 flex items-center justify-center text-2xl sm:text-3xl md:text-4xl font-bold text-white border-4 border-card shadow-xl">
-                {transformedStudent.name.split(' ').map(n => n[0]).join('').slice(0, 2)}
+                {transformedStudent.name.split(' ').map((n: string) => n[0]).join('').slice(0, 2)}
               </div>
             )}
           </div>

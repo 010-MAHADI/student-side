@@ -416,7 +416,7 @@ export function ProfilePage() {
       });
     }
 
-    marks.forEach(m => uniqueSubjects.add(m.subjectCode || m.subjectName || ''));
+    marks.forEach(m => uniqueSubjects.add(m.subject_code || m.subject_name || ''));
     if (uniqueSubjects.size === 0 && routine.length > 0) {
       routine.forEach(r => uniqueSubjects.add(r.subject_code || r.subject_name || ''));
     }
