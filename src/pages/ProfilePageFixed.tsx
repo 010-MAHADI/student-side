@@ -15,6 +15,7 @@ import { useNavigate } from 'react-router-dom';
 // Import services directly
 import { studentService } from '@/services/studentService';
 import { documentService } from '@/services/documentService';
+import { dashboardService } from '@/services/dashboardService';
 
 // Import profile components with fallbacks
 import { StudentProfileHeader } from '@/components/profile/StudentProfileHeader';
@@ -48,6 +49,33 @@ export function ProfilePageFixed() {
   // Documents data
   const [documents, setDocuments] = useState<any[]>([]);
   const [documentsLoading, setDocumentsLoading] = useState(false);
+  const [classRank, setClassRank] = useState<number | string>('-');
+
+  const getPreferredRollNumber = (data: any, fallbackId?: string | null): string | null => {
+    const candidates = [
+      data?.currentRollNumber,
+      data?.current_roll_number,
+      data?.rollNumber,
+      data?.roll_number,
+    ];
+
+    const clean = (value: unknown): string | null => {
+      if (typeof value === 'string' && value.trim()) return value.trim();
+      if (typeof value === 'number') return String(value);
+      return null;
+    };
+
+    const normalizedFallback = clean(fallbackId);
+    const normalizedCandidates = candidates.map(clean).filter(Boolean) as string[];
+
+    // If a roll candidate exists that differs from auth student ID, prefer it.
+    const nonIdCandidate = normalizedCandidates.find(
+      (candidate) => !normalizedFallback || candidate !== normalizedFallback
+    );
+    if (nonIdCandidate) return nonIdCandidate;
+
+    return normalizedCandidates[0] || null;
+  };
 
   useEffect(() => {
     if (!authLoading && user) {
@@ -74,9 +102,13 @@ export function ProfilePageFixed() {
       setError(null);
       
       console.log('Fetching student profile for ID:', user.relatedProfileId);
-      const data = await studentService.getMe(user.relatedProfileId);
+      const [data, dashboardData] = await Promise.all([
+        studentService.getMe(user.relatedProfileId),
+        dashboardService.getStudentStats(user.relatedProfileId).catch(() => null),
+      ]);
       console.log('Student profile data received:', data);
       setStudentData(data);
+      setClassRank(dashboardData?.performance?.classRank ?? '-');
     } catch (err: any) {
       const errorMsg = getErrorMessage(err);
       console.error('Failed to load student profile:', err);
@@ -91,7 +123,7 @@ export function ProfilePageFixed() {
       setStudentData({
         fullNameEnglish: user.name || 'Student',
         email: user.email || 'N/A',
-        currentRollNumber: user.studentId || studentData?.currentRollNumber || 'N/A',
+        currentRollNumber: studentData?.currentRollNumber || studentData?.rollNumber || user.studentId || 'N/A',
         department: user.department || 'N/A',
         semester: user.semester || 1,
         status: 'active',
@@ -101,6 +133,7 @@ export function ProfilePageFixed() {
         session: '2024-25',
         shift: '1st Shift'
       });
+      setClassRank('-');
       
       // Only show error in console, not to user since we have fallback
       console.warn('Using fallback profile data due to API error:', errorMsg);
@@ -171,6 +204,8 @@ export function ProfilePageFixed() {
   const displayName = isTeacher 
     ? (user?.name || 'Teacher')
     : (studentData?.fullNameEnglish || user?.name || 'Student');
+  const preferredRollNumber = getPreferredRollNumber(studentData, user?.studentId);
+  const profileIdentifier = preferredRollNumber || user?.studentId || studentData?.id || user?.relatedProfileId || 'N/A';
 
   const calculatePerformanceMetrics = () => {
     let currentGPA = 0;
@@ -269,7 +304,8 @@ export function ProfilePageFixed() {
         location={studentData?.presentAddress 
           ? `${studentData.presentAddress.district || ''}, ${studentData.presentAddress.division || 'Bangladesh'}`.replace(/^,\s*|,\s*$/g, '')
           : undefined}
-        studentId={user?.studentId || studentData?.id || user?.relatedProfileId || 'N/A'}
+        studentId={profileIdentifier}
+        rollNumber={preferredRollNumber || undefined}
         status={studentData?.status || 'active'}
       />
 
@@ -278,6 +314,7 @@ export function ProfilePageFixed() {
         gpa={Number(performanceMetrics.currentGPA) || 0}
         attendancePercentage={performanceMetrics.attendancePercentage}
         subjectsCount={performanceMetrics.subjectsCount}
+        rank={classRank}
       />
 
       {/* Tabs */}
@@ -321,7 +358,7 @@ export function ProfilePageFixed() {
                 personalInfo={{
                   fullName: displayName,
                   fullNameBangla: studentData?.fullNameBangla,
-                  rollNumber: user?.studentId || studentData?.currentRollNumber || 'N/A',
+                  rollNumber: profileIdentifier,
                   email: studentData?.email || user?.email || 'N/A',
                   mobile: studentData?.mobileStudent,
                   dateOfBirth: studentData?.dateOfBirth,
@@ -339,6 +376,7 @@ export function ProfilePageFixed() {
                   gpa: Number(performanceMetrics.currentGPA) || 0,
                   attendancePercentage: performanceMetrics.attendancePercentage,
                   subjectsCount: performanceMetrics.subjectsCount,
+                  rank: classRank,
                 }}
                 parentInfo={{
                   fatherName: studentData?.fatherName,
